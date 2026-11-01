@@ -1,0 +1,16 @@
+---
+# The whole fleet, described once. Safe to run any number of times: a second run changes nothing.
+- name: Baseline for every server
+  hosts: all
+  roles:
+    - common
+
+- name: Web servers
+  hosts: web
+  roles:
+    - nginx_site
+
+- name: Tool server
+  hosts: tools
+  roles:
+    - toolbox

@@ -1,0 +1,22 @@
+---
+# Rolling update: one web server at a time, and the next one is touched only after the previous one
+# answers its health check. Usage: ansible-playbook playbooks/rolling.yml -e site_version=2
+- name: Rolling update of the web servers
+  hosts: web
+  serial: 1
+  max_fail_percentage: 0
+  roles:
+    - nginx_site
+  post_tasks:
+    - name: Wait until {{ inventory_hostname }} is healthy before moving on
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}:{{ nginx_listen_port }}/healthz"
+        return_content: true
+      register: health
+      until: health.status == 200
+      retries: 10
+      delay: 1
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      tags: [health]

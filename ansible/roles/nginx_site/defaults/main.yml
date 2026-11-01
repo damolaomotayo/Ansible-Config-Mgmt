@@ -1,0 +1,3 @@
+---
+nginx_listen_port: 80
+site_color: "#2563eb"

@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+server {
+    listen {{ nginx_listen_port }} default_server;
+    server_name _;
+    root /var/www/site;
+    index index.html;
+
+    add_header X-Managed-By "ansible" always;
+{% if site_cache_seconds | int > 0 %}
+    add_header Cache-Control "max-age={{ site_cache_seconds }}" always;
+{% else %}
+    add_header Cache-Control "no-store" always;
+{% endif %}
+
+    location = /healthz {
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ inventory_hostname }} - {{ site_title }}</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f5f6f8; color: #1b1f24; }
+  header { background: {{ site_color }}; color: #fff; padding: 28px 24px; }
+  header p { margin: 0 0 6px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+  header h1 { margin: 0; font-size: 34px; }
+  main { max-width: 560px; margin: 24px auto; padding: 0 16px; }
+  .msg { font-size: 20px; margin: 0 0 18px; }
+  dl { display: grid; grid-template-columns: 140px 1fr; gap: 10px 16px; background: #fff; padding: 20px; border-radius: 10px; }
+  dt { color: #5b6470; }
+  dd { margin: 0; font-weight: 600; word-break: break-all; }
+</style>
+</head>
+<body>
+<header>
+  <p>Managed by Ansible</p>
+  <h1>{{ inventory_hostname }}</h1>
+</header>
+<main>
+  <p class="msg">{{ site_message }}</p>
+  <dl>
+    <dt>Release</dt><dd>Release {{ site_version }}</dd>
+    <dt>Group</dt><dd>{{ group_names | sort | join(', ') }}</dd>
+    <dt>Operating system</dt><dd>{{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}</dd>
+    <dt>Secret</dt><dd>loaded from Ansible Vault (never shown)</dd>
+  </dl>
+</main>
+</body>
+</html>

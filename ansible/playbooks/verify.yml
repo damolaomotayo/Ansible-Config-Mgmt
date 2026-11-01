@@ -1,0 +1,54 @@
+---
+# Read-only checks, run from the control container. Changes nothing.
+- name: Check the web servers from the outside
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Fetch each web server's home page
+      ansible.builtin.uri:
+        url: "http://{{ item }}:{{ hostvars[item].nginx_listen_port }}/"
+        return_content: true
+      loop: "{{ groups['web'] }}"
+      register: pages
+      changed_when: false
+
+    - name: Every page names its own server and says Ansible manages it
+      ansible.builtin.assert:
+        that:
+          - item.status == 200
+          - "'Managed by Ansible' in item.content"
+          - "('<h1>' ~ item.item ~ '</h1>') in item.content"
+          - "'Release ' ~ site_version in item.content"
+        fail_msg: "Unexpected page from {{ item.item }}"
+        quiet: true
+      loop: "{{ pages.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: The secret token must never be on a page
+      ansible.builtin.assert:
+        that: vault_site_api_token not in item.content
+        quiet: true
+      loop: "{{ pages.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      no_log: true
+
+- name: Check file permissions on the servers
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Stat the secret file
+      ansible.builtin.stat:
+        path: "{{ fs_root }}/etc/site/secret.env"
+      register: secret
+
+    - name: It exists, belongs to root and is readable by root only
+      ansible.builtin.assert:
+        that:
+          - secret.stat.exists
+          - secret.stat.mode == '0600'
+          - secret.stat.pw_name == 'root'
+        quiet: true

@@ -1,0 +1,37 @@
+---
+- name: Install the baseline packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: false # the node image already has fresh package lists
+  when: manage_system | bool
+
+- name: Create the "deploy" group
+  ansible.builtin.group:
+    name: deploy
+    state: present
+  when: manage_system | bool
+
+- name: Create the "deploy" user
+  ansible.builtin.user:
+    name: deploy
+    group: deploy
+    shell: /bin/bash
+    create_home: true
+  when: manage_system | bool
+
+- name: Make sure /etc exists (only matters for the tests, which write under a scratch folder)
+  ansible.builtin.file:
+    path: "{{ fs_root }}/etc"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Leave a note on the server saying who manages it
+  ansible.builtin.template:
+    src: ansible-managed.txt.j2
+    dest: "{{ fs_root }}/etc/ansible-managed.txt"
+    owner: root
+    group: root
+    mode: "0644"

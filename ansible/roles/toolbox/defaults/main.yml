@@ -1,0 +1,3 @@
+---
+toolbox_packages: [jq, htop, cron, logrotate]
+toolbox_report_minutes: "*/5"

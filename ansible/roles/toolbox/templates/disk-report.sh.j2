@@ -1,0 +1,4 @@
+#!/bin/sh
+# {{ ansible_managed }}
+echo "report from {{ inventory_hostname }} ($(date -u +%FT%TZ))"
+df -h / | tail -n 1

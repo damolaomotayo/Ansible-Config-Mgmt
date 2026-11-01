@@ -1,0 +1,14 @@
+---
+# Settings every server gets. Override on the command line with -e, per group in group_vars/<group>.yml,
+# or per server in host_vars/<host>.yml (more specific wins).
+
+site_title: "Ansible Lab"
+site_message: "Configured by Ansible"
+site_version: "1"
+site_cache_seconds: 0
+
+# Prefix for every path Ansible writes. Always empty on the real servers; the tests set it to a scratch folder.
+fs_root: ""
+
+# Install packages, create users, start services. The tests turn this off to run without root or apt.
+manage_system: true

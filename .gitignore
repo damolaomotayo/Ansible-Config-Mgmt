@@ -1,0 +1,9 @@
+.env
+.ssh/
+.vault_pass
+ansible/inventory/group_vars/all/vault.yml
+__pycache__/
+*.pyc
+.venv/
+*.pem
+.DS_Store

@@ -1,0 +1,78 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: false
+  when: manage_system | bool
+
+- name: Create the site folders
+  ansible.builtin.file:
+    path: "{{ fs_root }}{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /var/www/site, mode: "0755" }
+    - { path: /etc/site, mode: "0750" }
+    - { path: /etc/nginx/sites-available, mode: "0755" }
+    - { path: /etc/nginx/sites-enabled, mode: "0755" }
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Remove nginx's default welcome site
+  ansible.builtin.file:
+    path: "{{ fs_root }}/etc/nginx/sites-enabled/default"
+    state: absent
+  notify: reload nginx
+
+- name: Write the site's nginx configuration
+  ansible.builtin.template:
+    src: site.conf.j2
+    dest: "{{ fs_root }}/etc/nginx/sites-available/site.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload nginx
+
+- name: Enable the site
+  ansible.builtin.file:
+    src: ../sites-available/site.conf
+    dest: "{{ fs_root }}/etc/nginx/sites-enabled/site.conf"
+    state: link
+  notify: reload nginx
+
+- name: Write the home page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ fs_root }}/var/www/site/index.html"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Write the secret (comes from Ansible Vault, readable by root only)
+  ansible.builtin.template:
+    src: secret.env.j2
+    dest: "{{ fs_root }}/etc/site/secret.env"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Check the nginx configuration is valid before using it
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  when: manage_system | bool
+
+- name: Make sure nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    use: service
+  when: manage_system | bool
+
+# Without this, a change that notifies the handler would wait until the end of the play. Flushing here means
+# the new configuration is live before the rolling update's health check (and before the next server starts).
+- name: Apply any pending reload now
+  ansible.builtin.meta: flush_handlers

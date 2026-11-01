@@ -1,0 +1,6 @@
+{{ ansible_managed }}
+This server is configured by Ansible. Do not edit files by hand: the next run will overwrite them.
+
+host:        {{ inventory_hostname }}
+groups:      {{ group_names | sort | join(', ') }}
+os:          {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}

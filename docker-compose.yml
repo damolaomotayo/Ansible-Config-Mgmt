@@ -1,0 +1,49 @@
+name: ansible-lab
+
+# Three "servers" (containers running SSH) and one Ansible control container. Only the two web servers
+# publish a port, so you can see the result in a browser. SSH between containers stays on the private network.
+x-node: &node
+  build:
+    context: ./node
+    args:
+      UBUNTU_IMAGE: ${UBUNTU_IMAGE:-ubuntu:24.04}
+  image: ansible-lab-node:local
+  init: true
+  restart: unless-stopped
+  volumes:
+    - ./.ssh/id_ed25519.pub:/keys/authorized_keys:ro
+
+services:
+  web1:
+    <<: *node
+    container_name: ansible-lab-web1
+    hostname: web1
+    ports:
+      - "8081:80"
+
+  web2:
+    <<: *node
+    container_name: ansible-lab-web2
+    hostname: web2
+    ports:
+      - "8082:80"
+
+  tools1:
+    <<: *node
+    container_name: ansible-lab-tools1
+    hostname: tools1
+
+  control:
+    build:
+      context: ./control
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+    image: ansible-lab-control:local
+    container_name: ansible-lab-control
+    profiles: ["tools"]            # never started by "up"; run on demand with "docker compose run"
+    volumes:
+      - ./ansible:/ansible
+      - ./.ssh/id_ed25519:/ssh-src/id_ed25519:ro
+      - ./.vault_pass:/run/vault_pass:ro

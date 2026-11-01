@@ -1,0 +1,3 @@
+---
+# Only the web servers.
+nginx_listen_port: 80

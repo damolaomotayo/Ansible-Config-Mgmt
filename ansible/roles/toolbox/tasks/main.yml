@@ -1,0 +1,40 @@
+---
+- name: Install the tools
+  ansible.builtin.apt:
+    name: "{{ toolbox_packages }}"
+    state: present
+    update_cache: false
+  when: manage_system | bool
+
+- name: Make sure the script and logrotate folders exist
+  ansible.builtin.file:
+    path: "{{ fs_root }}{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: [/usr/local/bin, /etc/logrotate.d]
+
+- name: Install the disk report script
+  ansible.builtin.template:
+    src: disk-report.sh.j2
+    dest: "{{ fs_root }}/usr/local/bin/disk-report.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Rotate the report's log file
+  ansible.builtin.template:
+    src: logrotate.j2
+    dest: "{{ fs_root }}/etc/logrotate.d/toolbox"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Schedule the disk report
+  ansible.builtin.cron:
+    name: disk report
+    minute: "{{ toolbox_report_minutes }}"
+    job: "/usr/local/bin/disk-report.sh >> /var/log/toolbox.log 2>&1"
+    user: root
+  when: manage_system | bool

@@ -1,0 +1,4 @@
+---
+# up.sh creates group_vars/all/vault.yml from this shape with a random value and ENCRYPTS it with
+# ansible-vault. The encrypted file is git-ignored; this example is not secret.
+vault_site_api_token: "replaced-with-a-random-value-by-up.sh"

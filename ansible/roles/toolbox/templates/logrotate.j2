@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+/var/log/toolbox.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
